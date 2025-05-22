@@ -1,15 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electron SQLite App</title>
-</head>
 <body>
     <h1>Welcome to Electron SQLite App</h1>
-    <button id="create-db">Create Database</button>
-    <pre id="output"></pre>
+
+    <form id="data-form">
+        <input type="text" id="text-input" placeholder="Enter text" required />
+        <button type="submit">Submit</button>
+    </form>
+    <button id="refresh-list">Refresh Client List</button>
+
+    <div id="client-list"
+        style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; margin-top: 10px; padding: 5px;"></div>
+
+    <pre id="output">asdf</pre>
 
     <script src="renderer.js"></script>
 </body>
-</html>

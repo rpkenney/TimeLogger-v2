@@ -1,7 +1,10 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const { openDatabase, createClientsTable } = require('./database');
 
 let mainWindow;
+
+app.commandLine.appendSwitch('ignore-certificate-errors');
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -9,8 +12,8 @@ function createWindow() {
         height: 600,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
-            nodeIntegration: true,  // For SQLite3 integration in the renderer process
-            contextIsolation: false // Disable context isolation
+            nodeIntegration: true,
+            contextIsolation: false,
         }
     });
 
@@ -18,13 +21,25 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-    createWindow();
+    // Open DB and create table at startup
+    const db = openDatabase();
+    createClientsTable(db, (err) => {
+        if (err) {
+            console.error('Failed to create clients table:', err);
+        } else {
+            console.log('Clients table created or already exists');
+        }
+        db.close();
 
-    app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        // After DB setup, create the window
+        createWindow();
     });
 });
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });

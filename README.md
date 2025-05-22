@@ -13,3 +13,7 @@ System for logging your time and building invoices
 
 - npm i
 - npm start
+
+## Release
+
+- npx electron-packager . your-app-name --platform=win32 --arch=x64 --out=release-build --overwrite

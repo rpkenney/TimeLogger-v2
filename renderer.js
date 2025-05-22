@@ -1,22 +1,45 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+document.addEventListener('DOMContentLoaded', () => {
+    const { openDatabase, createClientsTable, insertClient, getClients } = require('./database');
 
-document.getElementById('create-db').addEventListener('click', () => {
-    const dbPath = path.join(__dirname, 'test.db');
-    const db = new sqlite3.Database(dbPath, (err) => {
-        if (err) {
-            document.getElementById('output').textContent = `Error: ${err.message}`;
-            return;
-        }
-        document.getElementById('output').textContent = 'Database created successfully!';
+    document.getElementById('data-form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const inputValue = document.getElementById('text-input').value;
+        const db = openDatabase();
 
-        db.run('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)', [], (err) => {
+        insertClient(db, inputValue, (err) => {
             if (err) {
-                document.getElementById('output').textContent += `\nError creating table: ${err.message}`;
+                document.getElementById('output').textContent += `\nInsert error: ${err.message}`;
             } else {
-                document.getElementById('output').textContent += '\nTable created successfully!';
+                document.getElementById('output').textContent += `\nClient added!`;
             }
             db.close();
         });
+    });
+
+    function getClientTable(db) {
+        getClients(db, (err, rows) => {
+            const list = document.getElementById('client-list');
+            list.innerHTML = '';
+
+            if (err) {
+                list.textContent = `Fetch error: ${err.message}`;
+            } else {
+                if (rows.length === 0) {
+                    list.textContent = 'No clients found.';
+                } else {
+                    rows.forEach(row => {
+                        const div = document.createElement('div');
+                        div.textContent = row.name;
+                        list.appendChild(div);
+                    });
+                }
+            }
+        });
+    }
+
+    document.getElementById('refresh-list').addEventListener('click', () => {
+        const db = openDatabase();
+        getClientTable(db);
+        db.close()
     });
 });
