@@ -1,6 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
-const { close, createClientsTable } = require('./database');
+const { close, createClientsTable, createHourlyRateTable, initHourlyRateTable } = require('./database');
 
 let mainWindow;
 
@@ -11,7 +11,7 @@ function createWindow() {
         width: 1000,
         height: 800,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
+            //preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: true,
             contextIsolation: false,
         }
@@ -23,6 +23,13 @@ function createWindow() {
 app.whenReady().then(() => {
     createWindow();
     createClientsTable();
+    createHourlyRateTable(() => {
+        initHourlyRateTable((err) => {
+            if (err) console.error('Insert failed:', err);
+            else console.log('Table initialized.');
+        });
+    });
+
 });
 
 app.on('window-all-closed', () => {

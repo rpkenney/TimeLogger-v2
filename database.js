@@ -10,6 +10,7 @@ function openDatabase() {
     return new sqlite3.Database(dbPath);
 }
 
+//clients
 function createClientsTable(callback) {
     db.run('CREATE TABLE IF NOT EXISTS clients (name TEXT PRIMARY KEY, active BOOLEAN DEFAULT 1)', [], callback);
 }
@@ -38,10 +39,30 @@ function restoreClient(name, callback) {
     db.run('UPDATE clients SET active = 1 WHERE name = ?', [name], callback);
 }
 
+//hourlyRate
+function createHourlyRateTable(callback) {
+    db.run('CREATE TABLE IF NOT EXISTS hourlyRate (id TEXT PRIMARY KEY, rate INTEGER)', callback);
+}
+
+function initHourlyRateTable(callback) {
+    db.run('INSERT OR IGNORE INTO hourlyRate (id, rate) VALUES (?, ?)', ['current', 30], callback);
+}
+
+function getHourlyRate(callback) {
+    db.all('SELECT rate FROM hourlyRate WHERE id = ?', ['current'], callback);
+}
+
+function updateHourlyRate(newRate, callback) {
+    db.run('UPDATE hourlyRate SET rate = ? WHERE id = ?', [newRate, 'current'], callback);
+}
 
 module.exports = {
     openDatabase,
     createClientsTable,
+    createHourlyRateTable,
+    initHourlyRateTable,
+    getHourlyRate,
+    updateHourlyRate,
     updateClient,
     insertClient,
     deleteClient,
