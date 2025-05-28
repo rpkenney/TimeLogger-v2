@@ -1,0 +1,27 @@
+html,
+body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+}
+
+.title {
+    margin-left: 32px;
+    margin-top: 16px;
+}
+
+.title h1 {
+    font-size: 2rem;
+    color: #333;
+    margin: 0;
+}
+
+.title pre {
+    font-family: inherit;
+    font-size: 1rem;
+    color: #666;
+    margin: 8px 0 0;
+    white-space: normal;
+}

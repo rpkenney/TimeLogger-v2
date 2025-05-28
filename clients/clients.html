@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Clients</title>
+    <link rel="stylesheet" href="clients.css">
+    <link rel="stylesheet" href="../global.css">
+</head>
+
+<body>
+
+    <div class="title">
+        <h1>Clients</h1>
+        <pre id="output">Manage your clients</pre>
+    </div>
+
+    <div id="client-parent">
+        <div id="client-form">
+            <p>Enter a new client's name</p>
+            <form id="data-form">
+                <input type="text" id="text-input" placeholder="Enter text" required />
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+        <div>
+            <div id="client-list"></div>
+            <button id="restoreBtn">Restore deleted clients</button>
+        </div>
+    </div>
+    </div>
+
+    <script src="../renderer.js"></script>
+    <script src="clients.js"></script>
+</body>
+
+</html>

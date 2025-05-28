@@ -1,27 +1,56 @@
 // database.js
+
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const dbPath = path.join(__dirname, 'test.db');
+
+const db = openDatabase();
 
 function openDatabase() {
     return new sqlite3.Database(dbPath);
 }
 
-function createClientsTable(db, callback) {
-    db.run('CREATE TABLE IF NOT EXISTS clients (name TEXT PRIMARY KEY)', [], callback);
+function createClientsTable(callback) {
+    db.run('CREATE TABLE IF NOT EXISTS clients (name TEXT PRIMARY KEY, active BOOLEAN DEFAULT 1)', [], callback);
 }
 
-function insertClient(db, name, callback) {
+function insertClient(name, callback) {
     db.run('INSERT INTO clients (name) VALUES (?)', [name], callback);
 }
 
-function getClients(db, callback) {
-    db.all('SELECT name FROM clients', [], callback);
+function deleteClient(name, callback) {
+    db.run('UPDATE clients SET active = 0 WHERE name = ?', [name], callback);
 }
+
+function getClients(callback) {
+    db.all('SELECT name FROM clients WHERE active = 1 ORDER BY LOWER(name)', [], callback);
+}
+
+function getDeletedClients(callback) {
+    db.all('SELECT name FROM clients WHERE active = 0 ORDER BY LOWER(name)', [], callback);
+}
+
+function updateClient(oldName, newName, callback) {
+    db.run('UPDATE clients SET name = ? WHERE name = ?', [newName, oldName], callback);
+}
+
+function restoreClient(name, callback) {
+    db.run('UPDATE clients SET active = 1 WHERE name = ?', [name], callback);
+}
+
 
 module.exports = {
     openDatabase,
     createClientsTable,
+    updateClient,
     insertClient,
-    getClients
+    deleteClient,
+    getClients,
+    getDeletedClients,
+    close,
+    restoreClient
 };
+
+function close() {
+    db.close();
+}
