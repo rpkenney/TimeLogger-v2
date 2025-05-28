@@ -15,8 +15,23 @@
         <pre id="output">Manage your tasks</pre>
     </div>
 
+    <div id="task-parent">
+        <div id="task-form">
+            <p>Enter a new task type name</p>
+            <form id="data-form">
+                <input type="text" id="text-input" placeholder="Enter text" required />
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+        <div>
+            <div id="task-list"></div>
+            <button id="restoreBtn">Restore deleted task types</button>
+        </div>
+    </div>
+    </div>
+
     <script src="../renderer.js"></script>
-    <script src="task.js"></script>
+    <script src="tasks.js"></script>
 </body>
 
 </html>

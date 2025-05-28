@@ -39,6 +39,35 @@ function restoreClient(name, callback) {
     db.run('UPDATE clients SET active = 1 WHERE name = ?', [name], callback);
 }
 
+//tasks
+function createTasksTable(callback) {
+    db.run('CREATE TABLE IF NOT EXISTS tasks (name TEXT PRIMARY KEY, active BOOLEAN DEFAULT 1)', [], callback);
+}
+
+function insertTask(name, callback) {
+    db.run('INSERT INTO tasks (name) VALUES (?)', [name], callback);
+}
+
+function deleteTask(name, callback) {
+    db.run('UPDATE tasks SET active = 0 WHERE name = ?', [name], callback);
+}
+
+function getTasks(callback) {
+    db.all('SELECT name FROM tasks WHERE active = 1 ORDER BY LOWER(name)', [], callback);
+}
+
+function getDeletedTasks(callback) {
+    db.all('SELECT name FROM tasks WHERE active = 0 ORDER BY LOWER(name)', [], callback);
+}
+
+function updateTask(oldName, newName, callback) {
+    db.run('UPDATE tasks SET name = ? WHERE name = ?', [newName, oldName], callback);
+}
+
+function restoreTask(name, callback) {
+    db.run('UPDATE tasks SET active = 1 WHERE name = ?', [name], callback);
+}
+
 //hourlyRate
 function createHourlyRateTable(callback) {
     db.run('CREATE TABLE IF NOT EXISTS hourlyRate (id TEXT PRIMARY KEY, rate INTEGER)', callback);
@@ -58,18 +87,25 @@ function updateHourlyRate(newRate, callback) {
 
 module.exports = {
     openDatabase,
+    close,
     createClientsTable,
-    createHourlyRateTable,
-    initHourlyRateTable,
-    getHourlyRate,
-    updateHourlyRate,
     updateClient,
     insertClient,
     deleteClient,
     getClients,
     getDeletedClients,
-    close,
-    restoreClient
+    restoreClient,
+    createTasksTable,
+    updateTask,
+    insertTask,
+    deleteTask,
+    getTasks,
+    getDeletedTasks,
+    restoreTask,
+    createHourlyRateTable,
+    initHourlyRateTable,
+    getHourlyRate,
+    updateHourlyRate,
 };
 
 function close() {

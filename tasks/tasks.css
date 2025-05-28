@@ -1,0 +1,43 @@
+#task-parent {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    padding: 16px;
+    box-sizing: border-box;
+    gap: 16px;
+}
+
+#task-parent>div:first-child {
+    width: 35%;
+}
+
+#task-parent>div:last-child {
+    width: 65%;
+}
+
+#task-parent>div {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background: linear-gradient(to bottom right, #ffffff, #f5f7fa);
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
+
+    height: fit-content;
+    max-height: 75%;
+    overflow: auto;
+    flex: 0 1 auto;
+}
+
+#task-list {
+    flex: 1;
+    overflow-y: auto;
+    background-color: #fefefe;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 8px;
+    min-height: 0;
+    /* necessary for flex children */
+}
