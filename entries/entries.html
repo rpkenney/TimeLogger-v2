@@ -2,13 +2,60 @@
     <meta charset="UTF-8">
     <title>Entries</title>
     <link rel="stylesheet" href="../global.css">
+    <link rel="stylesheet" href="entries.css">
 </head>
 
 <body>
+
+    <div id="entryNav">
+        <button id="newBtn">New</button>
+        <button id="searchBtn">Search</button>
+    </div>
+
     <div class="title">
         <h1>Entries</h1>
         <pre id="output">Manage your entries</pre>
     </div>
 
+    <div id="newContent">
+        <form id="entryForm">
+            <div class="formRow">
+                <div>
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+                <div>
+                    <label for="client">Client:</label>
+                    <select id="client" name="client" required>
+                        <option value="">Select a client</option>
+                    </select>
+                </div>
+            </div>
+            <div id="tasksContainer">
+                <div class="taskGroup">
+                    <label>Task:</label>
+                    <div id="taskForm">
+                        <select id="task" name="task" required>
+                            <option value="">Select a task</option>
+                        </select>
+                        <input type="number" name="hours" step="1" min="0" placeholder="Hours">
+                        <input type="number" name="quantity" step="1" min="0" placeholder="Quantity">
+                    </div>
+                    <div class="task-description-container">
+                        <textarea name="description" placeholder="Description" required></textarea>
+                    </div>
+                </div>
+            </div>
+            <button type="button" id="addTaskBtn">Add Another Task</button>
+            <button type="submit">Submit</button>
+        </form>
+
+    </div>
+
+    <div id="searchContent">
+        <p>This is the Search interface.</p>
+    </div>
+
     <script src="../renderer.js"></script>
+    <script src="entries.js"></script>
 </body>

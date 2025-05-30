@@ -1,6 +1,6 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
-const { close, createClientsTable, createHourlyRateTable, initHourlyRateTable, createTasksTable } = require('./database');
+const { close, createClientsTable, createHourlyRateTable, initHourlyRateTable, createTasksTable, createEntriesTable } = require('./database');
 
 let mainWindow;
 
@@ -22,8 +22,11 @@ function createWindow() {
 
 app.whenReady().then(() => {
     createWindow();
-    createClientsTable();
-    createTasksTable();
+    createClientsTable(() => {
+        createTasksTable(() => {
+            createEntriesTable();
+        });
+    });
     createHourlyRateTable(() => {
         initHourlyRateTable((err) => {
             if (err) console.error('Insert failed:', err);

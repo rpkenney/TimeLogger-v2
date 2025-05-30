@@ -1,0 +1,158 @@
+html,
+body {
+    height: 100%;
+    margin: 0;
+}
+
+#entryNav {
+    background-color: #333;
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+#entryNav button {
+    color: white;
+    background: none;
+    border: 1px solid white;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+#newContent {
+    max-height: 100%;
+}
+
+#searchContent {
+    display: none
+}
+
+/* Main form box */
+#entryForm {
+    background-color: white;
+    padding: 16px 20px;
+    border-radius: 10px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-size: 14px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.formRow {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.formRow>div {
+    flex: 1;
+    min-width: 150px;
+}
+
+.formRow label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.formRow input,
+.formRow select {
+    width: 100%;
+    padding: 6px;
+    font-size: 14px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+/* Neutral buttons */
+#entryForm button {
+    background-color: #f1f1f1;
+    color: #333;
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#entryForm button:hover {
+    background-color: #e6e6e6;
+}
+
+#tasksContainer {
+    max-height: 50vh;
+    /* e.g. max 40% of viewport height */
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.taskGroup {
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 8px;
+    background-color: #fafafa;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+}
+
+.removeTask {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 4px;
+    border: 1px solid #333;
+    background-color: #eee;
+}
+
+#taskForm {
+    display: flex;
+    gap: 8px;
+    box-sizing: border-box;
+    width: 100%;
+    /* make sure it fits the parent */
+}
+
+#taskForm select {
+    flex: 0 0 40%;
+    min-width: 100px;
+    box-sizing: border-box;
+}
+
+#taskForm input[name="hours"],
+#taskForm input[name="quantity"] {
+    flex: 0 0 20%;
+    min-width: 80px;
+    box-sizing: border-box;
+}
+
+/* Description container takes full width */
+.task-description-container {
+    width: 100%;
+}
+
+/* Textarea styling */
+.task-description-container textarea {
+    width: 100%;
+    min-height: 60px;
+    /* initial height */
+    resize: vertical;
+    /* allow vertical resize only */
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 6px;
+    font-family: inherit;
+    font-size: 1rem;
+}

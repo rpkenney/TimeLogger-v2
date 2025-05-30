@@ -10,6 +10,25 @@ function openDatabase() {
     return new sqlite3.Database(dbPath);
 }
 
+//entries
+function createEntriesTable(callback) {
+    const sql = `
+        CREATE TABLE IF NOT EXISTS entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_name TEXT,
+            task_name TEXT,
+            date TEXT,
+            hours REAL,
+            quantity INTEGER,
+            description TEXT,
+            FOREIGN KEY(client_name) REFERENCES clients(name) ON UPDATE CASCADE,
+            FOREIGN KEY(task_name) REFERENCES tasks(name) ON UPDATE CASCADE
+        )
+    `;
+    db.run("PRAGMA foreign_keys = ON");
+    db.run(sql, [], callback);
+}
+
 //clients
 function createClientsTable(callback) {
     db.run('CREATE TABLE IF NOT EXISTS clients (name TEXT PRIMARY KEY, active BOOLEAN DEFAULT 1)', [], callback);
@@ -106,6 +125,7 @@ module.exports = {
     initHourlyRateTable,
     getHourlyRate,
     updateHourlyRate,
+    createEntriesTable
 };
 
 function close() {
