@@ -33,6 +33,10 @@ function insertEntry(client, task, date, hours, quantity, description, callback)
     db.run('INSERT INTO entries (client_name, task_name, date, hours, quantity, description) VALUES (?, ?, ?, ?, ?, ?)', [client, task, date, hours, quantity, description], callback);
 }
 
+function getEntries(callback) {
+    db.all('SELECT * FROM entries', callback)
+}
+
 //clients
 function createClientsTable(callback) {
     db.run('CREATE TABLE IF NOT EXISTS clients (name TEXT PRIMARY KEY, active BOOLEAN DEFAULT 1)', [], callback);
@@ -130,7 +134,8 @@ module.exports = {
     getHourlyRate,
     updateHourlyRate,
     createEntriesTable,
-    insertEntry
+    insertEntry,
+    getEntries
 };
 
 function close() {

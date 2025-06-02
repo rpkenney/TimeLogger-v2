@@ -52,7 +52,24 @@
     </div>
 
     <div id="searchContent">
-        <p>This is the Search interface.</p>
+        <div>
+            <div>
+                <select id="client" name="client">
+                        <option value="">Select a client</option>
+                    </select>
+            </div>
+            <div>
+                <div>
+                    <label for="date">Start Date:</label>
+                    <input type="date" id="date" name="date">
+                    <label for="date">End Date:</label>
+                    <input type="date" id="date" name="date">
+                </div>
+            </div>
+        </div>
+        <div id="searchResults">
+
+        </div>
     </div>
 
     <script src="../renderer.js"></script>

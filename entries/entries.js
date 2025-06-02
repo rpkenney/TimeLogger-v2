@@ -1,5 +1,6 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const { getClients, getTasks, insertEntry } = require('../database');
+const { getClients, getTasks, insertEntry, getEntries } = require('../database');
+
+document.addEventListener('DOMContentLoaded', async () => {
 
     const newBtn = document.getElementById('newBtn');
     const searchBtn = document.getElementById('searchBtn');
@@ -16,23 +17,24 @@ document.addEventListener('DOMContentLoaded', () => {
         newContent.style.display = 'none';
     });
 
-    const taskSelect = document.getElementById('task');
+    try {
+        const [clientRows, taskRows] = await Promise.all([
+            getClientsAsync(),
+            getTasksAsync()
+        ]);
 
-    function populateTaskOptions(selectElem, tasks) {
-        tasks.forEach(row => {
-            const option = document.createElement('option');
-            option.value = row.name;
-            option.textContent = row.name;
-            selectElem.appendChild(option);
+        const clients = clientRows.map(r => r.name);
+        const tasks = taskRows.map(r => r.name);
+
+        populateClientDropdown(document.getElementById('client'), clients);
+        populateTaskDropdown(document.getElementById('task'), tasks);
+
+        getEntries((err, entries) => {
+            if (err) return console.error(err);
+            entries.forEach(row => {
+                createClientCard(row, clients, tasks);
+            });
         });
-    }
-
-    getTasks((err, rows) => {
-        if (err) {
-            console.error('Error fetching clients:', err);
-            return;
-        }
-        populateTaskOptions(taskSelect, rows);
 
         document.getElementById('addTaskBtn').addEventListener('click', () => {
             const container = document.getElementById('tasksContainer');
@@ -58,29 +60,19 @@ document.addEventListener('DOMContentLoaded', () => {
             // After inserting, populate the newly added select with task options
             const newTaskSelect = container.lastElementChild.querySelector('select[name="task"]');
             populateTaskOptions(newTaskSelect, rows);
-        });
-    });
+        })
 
-    document.getElementById("tasksContainer").addEventListener('click', (event) => {
+    } catch (err) {
+        console.error('Failed to load clients or tasks:', err);
+    }
+
+        document.getElementById("tasksContainer").addEventListener('click', (event) => {
         if (event.target.classList.contains('removeTask')) {
             event.target.closest('.taskGroup').remove();
         }
     });
 
-    const clientSelect = document.getElementById('client');
 
-    getClients((err, rows) => {
-        if (err) {
-            console.error('Error fetching clients:', err);
-            return;
-        }
-        rows.forEach(row => {
-            const option = document.createElement('option');
-            option.value = row.name;
-            option.textContent = row.name;
-            clientSelect.appendChild(option);
-        });
-    });
 
     document.getElementById('entryForm').addEventListener('submit', (event) => {
         event.preventDefault();
@@ -124,3 +116,94 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 });
+
+function getClientsAsync() {
+    return new Promise((resolve, reject) => {
+        getClients((err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
+function getTasksAsync() {
+    return new Promise((resolve, reject) => {
+        getTasks((err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
+function populateClientDropdown(select, clients) {
+    clients.forEach(name => {
+        const option = document.createElement('option');
+        option.value = option.textContent = name;
+        select.appendChild(option);
+    });
+}
+
+function populateTaskDropdown(select, tasks) {
+    tasks.forEach(name => {
+        const option = document.createElement('option');
+        option.value = option.textContent = name;
+        select.appendChild(option);
+    });
+}
+
+
+
+function createClientCard(row, clients, taskTypes) {
+    const clientDiv = document.createElement("div");
+    clientDiv.className = "client-entry";
+
+    const clientSelect = document.createElement("select");
+    clients.forEach(client => {
+        const option = document.createElement("option");
+        option.value = option.textContent = client;
+        if (client === row.client) option.selected = true;
+        clientSelect.appendChild(option);
+    });
+    const dateInput = document.createElement("input");
+    dateInput.type = "date";
+    dateInput.value = row.date;
+
+    const descriptionInput = document.createElement("input");
+    descriptionInput.type = "text";
+    descriptionInput.value = row.description;
+    descriptionInput.placeholder = "Description";
+
+    const taskTypeSelect = document.createElement("select");
+    taskTypes.forEach(task => {
+        const option = document.createElement("option");
+        option.value = option.textContent = task;
+        if (task === row.taskType) option.selected = true;
+        taskTypeSelect.appendChild(option);
+    });
+
+    const hoursInput = document.createElement("input");
+    hoursInput.type = "number";
+    hoursInput.value = row.hours;
+    hoursInput.placeholder = "Hours";
+
+    const quantityInput = document.createElement("input");
+    quantityInput.type = "number";
+    quantityInput.value = row.quantity;
+    quantityInput.placeholder = "Quantity";
+
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "Delete";
+    deleteButton.onclick = () => {
+        clientDiv.remove();
+    };
+
+    clientDiv.appendChild(clientSelect);
+    clientDiv.appendChild(dateInput);
+    clientDiv.appendChild(descriptionInput);
+    clientDiv.appendChild(taskTypeSelect);
+    clientDiv.appendChild(hoursInput);
+    clientDiv.appendChild(quantityInput);
+    clientDiv.appendChild(deleteButton);
+
+    document.getElementById("searchResults").appendChild(clientDiv);
+}
