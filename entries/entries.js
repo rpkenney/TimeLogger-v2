@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const { getClients, getTasks } = require('../database');
+    const { getClients, getTasks, insertEntry } = require('../database');
 
     const newBtn = document.getElementById('newBtn');
     const searchBtn = document.getElementById('searchBtn');
@@ -81,5 +81,46 @@ document.addEventListener('DOMContentLoaded', () => {
             clientSelect.appendChild(option);
         });
     });
+
+    document.getElementById('entryForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const client = document.getElementById('client').value;
+        const date = document.getElementById('date').value;
+        const taskGroups = document.querySelectorAll('.taskGroup');
+
+        // Gather all task data into an array
+        const tasksData = Array.from(taskGroups).map(group => {
+            return {
+                task: group.querySelector('select[name="task"]').value,
+                hours: group.querySelector('input[name="hours"]').value,
+                quantity: group.querySelector('input[name="quantity"]').value,
+                description: group.querySelector('textarea[name="description"]').value,
+            };
+        });
+
+        // Insert tasks sequentially (or in parallel with Promise.all)
+        const insertPromises = tasksData.map(t => {
+            return new Promise((resolve, reject) => {
+                insertEntry(client, t.task, date, t.hours || 0, t.quantity || 0, t.description, (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
+        });
+
+        Promise.all(insertPromises)
+            .then(() => {
+                alert('All tasks inserted successfully!');
+                // Optionally reset the form here
+                document.getElementById('entryForm').reset();
+                // Optionally clear all tasks except the first one, etc.
+            })
+            .catch(err => {
+                console.error('Error inserting tasks:', err);
+                alert('There was an error inserting your tasks.');
+            });
+    });
+
 
 });
