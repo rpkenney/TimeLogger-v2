@@ -13,34 +13,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     searchBtn.addEventListener('click', () => {
-        searchContent.style.display = 'block';
+        searchContent.style.display = 'flex';
         newContent.style.display = 'none';
     });
 
+    var clients
+    var tasks
+    var entries
     try {
-        const [clientRows, taskRows] = await Promise.all([
+        const [clientRows, taskRows, entryRows] = await Promise.all([
             getClientsAsync(),
-            getTasksAsync()
+            getTasksAsync(),
+            getEntriesAsync()
         ]);
 
-        const clients = clientRows.map(r => r.name);
-        const tasks = taskRows.map(r => r.name);
+        clients = clientRows.map(r => r.name);
+        tasks = taskRows.map(r => r.name);
+        entries = entryRows
+    } catch (err) {
+        console.error('Failed to load clients or tasks:', err);
+    }
 
-        populateClientDropdown(document.getElementById('client'), clients);
-        populateTaskDropdown(document.getElementById('task'), tasks);
+    populateClientDropdown(document.getElementById('client'), clients);
+    populateClientDropdown(document.getElementById('searchClient'), clients);
+    populateTaskDropdown(document.getElementById('task'), tasks);
 
-        getEntries((err, entries) => {
-            if (err) return console.error(err);
-            entries.forEach(row => {
-                createClientCard(row, clients, tasks);
-            });
-        });
+    entries.forEach((entry) => createEntryCard(entry, clients, tasks))
 
-        document.getElementById('addTaskBtn').addEventListener('click', () => {
-            const container = document.getElementById('tasksContainer');
+    document.getElementById('addTaskBtn').addEventListener('click', () => {
+        const container = document.getElementById('tasksContainer');
 
-            const html = `
-                 <div class="taskGroup">
+        const html = `
+                 <div class="taskGroup secondary">
                     <label>Task:</label>
                     <button class="removeTask" type="button">Remove</button>
                     <div id="taskForm">
@@ -55,24 +59,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </div>`;
 
-            container.insertAdjacentHTML('beforeend', html);
+        container.insertAdjacentHTML('beforeend', html);
 
-            // After inserting, populate the newly added select with task options
-            const newTaskSelect = container.lastElementChild.querySelector('select[name="task"]');
-            populateTaskOptions(newTaskSelect, rows);
-        })
+        const newTaskSelect = container.lastElementChild.querySelector('select[name="task"]');
+        populateTaskDropdown(newTaskSelect, tasks);
+    })
 
-    } catch (err) {
-        console.error('Failed to load clients or tasks:', err);
-    }
-
-        document.getElementById("tasksContainer").addEventListener('click', (event) => {
+    document.getElementById("tasksContainer").addEventListener('click', (event) => {
         if (event.target.classList.contains('removeTask')) {
             event.target.closest('.taskGroup').remove();
         }
     });
-
-
 
     document.getElementById('entryForm').addEventListener('submit', (event) => {
         event.preventDefault();
@@ -81,7 +78,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const date = document.getElementById('date').value;
         const taskGroups = document.querySelectorAll('.taskGroup');
 
-        // Gather all task data into an array
         const tasksData = Array.from(taskGroups).map(group => {
             return {
                 task: group.querySelector('select[name="task"]').value,
@@ -91,7 +87,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
         });
 
-        // Insert tasks sequentially (or in parallel with Promise.all)
         const insertPromises = tasksData.map(t => {
             return new Promise((resolve, reject) => {
                 insertEntry(client, t.task, date, t.hours || 0, t.quantity || 0, t.description, (err) => {
@@ -104,17 +99,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         Promise.all(insertPromises)
             .then(() => {
                 alert('All tasks inserted successfully!');
-                // Optionally reset the form here
                 document.getElementById('entryForm').reset();
-                // Optionally clear all tasks except the first one, etc.
+                document.querySelectorAll('div.remove-me').forEach(el => el.remove());
             })
             .catch(err => {
                 console.error('Error inserting tasks:', err);
                 alert('There was an error inserting your tasks.');
             });
     });
-
-
 });
 
 function getClientsAsync() {
@@ -135,6 +127,15 @@ function getTasksAsync() {
     });
 }
 
+function getEntriesAsync() {
+    return new Promise((resolve, reject) => {
+        getEntries((err, rows) => {
+            if (err) reject(err)
+            else resolve(rows)
+        });
+    })
+}
+
 function populateClientDropdown(select, clients) {
     clients.forEach(name => {
         const option = document.createElement('option');
@@ -152,58 +153,122 @@ function populateTaskDropdown(select, tasks) {
 }
 
 
+function createEntryCard(row, clients, taskTypes) {
+    const taskDiv = document.createElement("div");
+    taskDiv.className = "task-entry";
 
-function createClientCard(row, clients, taskTypes) {
-    const clientDiv = document.createElement("div");
-    clientDiv.className = "client-entry";
+    const taskSelectables = document.createElement("div")
+    taskSelectables.className = "task-selectables"
 
-    const clientSelect = document.createElement("select");
-    clients.forEach(client => {
-        const option = document.createElement("option");
-        option.value = option.textContent = client;
-        if (client === row.client) option.selected = true;
-        clientSelect.appendChild(option);
+    const dateInput = document.createElement('input');
+    dateInput.type = "date"
+
+    editableDate = insertEditableComponent("Date", dateInput, "nothing")
+    taskSelectables.appendChild(editableDate)
+
+    const clientInput = document.createElement("select")
+
+    editableClient = insertEditableComponent("Client", clientInput, "baz", clients)
+    taskSelectables.appendChild(editableClient)
+
+    const taskInput = document.createElement("select")
+
+    editableTask = insertEditableComponent("Task", taskInput, "baz", taskTypes)
+    taskSelectables.appendChild(editableTask)
+
+    const hoursInput = document.createElement('input');
+    hoursInput.type = 'number';
+    hoursInput.step = '1';
+    hoursInput.min = '0';
+
+    editableHours = insertEditableComponent("Hours", hoursInput, 0)
+    taskSelectables.appendChild(editableHours)
+
+    const quantityInput = document.createElement('input');
+    quantityInput.type = 'number';
+    quantityInput.step = '1';
+    quantityInput.min = '0';
+
+    editableQuantity = insertEditableComponent("Quantity", quantityInput, 0)
+    taskSelectables.appendChild(editableQuantity)
+
+
+    taskDiv.appendChild(taskSelectables)
+
+    const taskDescription = document.createElement("div")
+
+    const descriptionInput = document.createElement("textarea")
+
+    editableDescription = insertEditableComponent("Description", descriptionInput, "placeholder text")
+
+    taskDescription.appendChild(editableDescription)
+
+    taskDiv.appendChild(taskDescription)
+
+    document.getElementById("searchResults").appendChild(taskDiv);
+}
+
+function insertEditableComponent(header, editModeDiv, content, options) {
+
+    const container = document.createElement("div")
+    container.className = "taskInputContainer"
+
+    const headerDiv = document.createElement("div")
+    headerDiv.textContent = header
+    headerDiv.className = "editableHeader"
+
+    container.appendChild(headerDiv)
+
+    const contentDiv = document.createElement("div")
+
+    const regularModeDiv = document.createElement("div");
+    regularModeDiv.textContent = content;
+
+    regularModeDiv.className = "editableContent"
+
+    editModeDiv.display = "none";
+
+    if (options !== undefined) {
+        options.forEach(option => {
+            const o = document.createElement("option");
+            o.value = o.textContent = option;
+            editModeDiv.appendChild(o);
+        });
+    }
+
+    contentDiv.appendChild(regularModeDiv)
+    contentDiv.appendChild(editModeDiv)
+
+    container.append(contentDiv)
+
+    document.addEventListener("click", (event) => {
+        if (!editModeDiv.contains(event.target) && !regularModeDiv.contains(event.target)) {
+            editModeDiv.style.display = "none"
+            regularModeDiv.style.display = "block";
+            if (editModeDiv.value !== "") {
+                regularModeDiv.textContent = editModeDiv.value;
+            }
+        }
     });
-    const dateInput = document.createElement("input");
-    dateInput.type = "date";
-    dateInput.value = row.date;
 
-    const descriptionInput = document.createElement("input");
-    descriptionInput.type = "text";
-    descriptionInput.value = row.description;
-    descriptionInput.placeholder = "Description";
+    regularModeDiv.addEventListener("click", () => {
+        editModeDiv.style.display = "block"
+        regularModeDiv.style.display = "none";
+        editModeDiv.value = regularModeDiv.textContent
+    })
 
-    const taskTypeSelect = document.createElement("select");
-    taskTypes.forEach(task => {
-        const option = document.createElement("option");
-        option.value = option.textContent = task;
-        if (task === row.taskType) option.selected = true;
-        taskTypeSelect.appendChild(option);
+    editModeDiv.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && event.target.value !== "") {
+            editModeDiv.style.display = "none"
+            regularModeDiv.style.display = "block";
+            regularModeDiv.textContent = event.target.value;
+        }
+
+        if (event.key === "Escape") {
+            editModeDiv.style.display = "none"
+            regularModeDiv.style.display = "block";
+        }
     });
 
-    const hoursInput = document.createElement("input");
-    hoursInput.type = "number";
-    hoursInput.value = row.hours;
-    hoursInput.placeholder = "Hours";
-
-    const quantityInput = document.createElement("input");
-    quantityInput.type = "number";
-    quantityInput.value = row.quantity;
-    quantityInput.placeholder = "Quantity";
-
-    const deleteButton = document.createElement("button");
-    deleteButton.textContent = "Delete";
-    deleteButton.onclick = () => {
-        clientDiv.remove();
-    };
-
-    clientDiv.appendChild(clientSelect);
-    clientDiv.appendChild(dateInput);
-    clientDiv.appendChild(descriptionInput);
-    clientDiv.appendChild(taskTypeSelect);
-    clientDiv.appendChild(hoursInput);
-    clientDiv.appendChild(quantityInput);
-    clientDiv.appendChild(deleteButton);
-
-    document.getElementById("searchResults").appendChild(clientDiv);
+    return container
 }
