@@ -1,11 +1,16 @@
 const { getClients, getTasks, insertEntry, getEntries } = require('../database');
 
+
+var clients
+var tasks
 document.addEventListener('DOMContentLoaded', async () => {
 
     const newBtn = document.getElementById('newBtn');
     const searchBtn = document.getElementById('searchBtn');
     const newContent = document.getElementById('newContent');
     const searchContent = document.getElementById('searchContent');
+
+    searchContent.style.display = 'none';
 
     newBtn.addEventListener('click', () => {
         newContent.style.display = 'block';
@@ -17,8 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         newContent.style.display = 'none';
     });
 
-    var clients
-    var tasks
     var entries
     try {
         const [clientRows, taskRows, entryRows] = await Promise.all([
@@ -107,6 +110,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('There was an error inserting your tasks.');
             });
     });
+
+    document.getElementById("searchClient").addEventListener("change", async (event) => {
+        const selectedValue = event.target.value;
+        const div = document.getElementById("searchResults");
+        div.innerHTML = "";
+
+        var entries
+
+        try {
+            const [entryRows] = await Promise.all([
+                getEntriesAsync(selectedValue)
+            ]);
+            entries = entryRows
+        } catch (err) {
+            console.error('Failed to load entries:', err);
+        }
+
+        entries.forEach((entry) => createEntryCard(entry, clients, tasks))
+
+        console.log(entries)
+    });
 });
 
 function getClientsAsync() {
@@ -127,12 +151,12 @@ function getTasksAsync() {
     });
 }
 
-function getEntriesAsync() {
+function getEntriesAsync(client) {
     return new Promise((resolve, reject) => {
         getEntries((err, rows) => {
             if (err) reject(err)
             else resolve(rows)
-        });
+        }, client);
     })
 }
 
@@ -163,17 +187,17 @@ function createEntryCard(row, clients, taskTypes) {
     const dateInput = document.createElement('input');
     dateInput.type = "date"
 
-    editableDate = insertEditableComponent("Date", dateInput, "nothing")
+    editableDate = insertEditableComponent("Date", dateInput, row.date)
     taskSelectables.appendChild(editableDate)
 
     const clientInput = document.createElement("select")
 
-    editableClient = insertEditableComponent("Client", clientInput, "baz", clients)
+    editableClient = insertEditableComponent("Client", clientInput, row.client, clients)
     taskSelectables.appendChild(editableClient)
 
     const taskInput = document.createElement("select")
 
-    editableTask = insertEditableComponent("Task", taskInput, "baz", taskTypes)
+    editableTask = insertEditableComponent("Task", taskInput, row.task, taskTypes)
     taskSelectables.appendChild(editableTask)
 
     const hoursInput = document.createElement('input');
@@ -181,7 +205,7 @@ function createEntryCard(row, clients, taskTypes) {
     hoursInput.step = '1';
     hoursInput.min = '0';
 
-    editableHours = insertEditableComponent("Hours", hoursInput, 0)
+    editableHours = insertEditableComponent("Hours", hoursInput, row.hours)
     taskSelectables.appendChild(editableHours)
 
     const quantityInput = document.createElement('input');
@@ -189,7 +213,7 @@ function createEntryCard(row, clients, taskTypes) {
     quantityInput.step = '1';
     quantityInput.min = '0';
 
-    editableQuantity = insertEditableComponent("Quantity", quantityInput, 0)
+    editableQuantity = insertEditableComponent("Quantity", quantityInput, row.quantity)
     taskSelectables.appendChild(editableQuantity)
 
 
@@ -199,7 +223,7 @@ function createEntryCard(row, clients, taskTypes) {
 
     const descriptionInput = document.createElement("textarea")
 
-    editableDescription = insertEditableComponent("Description", descriptionInput, "placeholder text")
+    editableDescription = insertEditableComponent("Description", descriptionInput, row.description)
 
     taskDescription.appendChild(editableDescription)
 
@@ -255,6 +279,7 @@ function insertEditableComponent(header, editModeDiv, content, options) {
         editModeDiv.style.display = "block"
         regularModeDiv.style.display = "none";
         editModeDiv.value = regularModeDiv.textContent
+        editModeDiv.focus();
     })
 
     editModeDiv.addEventListener("keydown", (event) => {
@@ -268,6 +293,12 @@ function insertEditableComponent(header, editModeDiv, content, options) {
             editModeDiv.style.display = "none"
             regularModeDiv.style.display = "block";
         }
+    });
+
+    editModeDiv.addEventListener("change", () => {
+        editModeDiv.style.display = "none";
+        regularModeDiv.style.display = "block";
+        regularModeDiv.textContent = editModeDiv.value;
     });
 
     return container

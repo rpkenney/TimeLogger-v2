@@ -33,8 +33,12 @@ function insertEntry(client, task, date, hours, quantity, description, callback)
     db.run('INSERT INTO entries (client_name, task_name, date, hours, quantity, description) VALUES (?, ?, ?, ?, ?, ?)', [client, task, date, hours, quantity, description], callback);
 }
 
-function getEntries(callback) {
-    db.all('SELECT * FROM entries', callback)
+function getEntries(callback, client) {
+    if (!client) {
+        db.all('SELECT * FROM entries', callback)
+    } else {
+        db.all('SELECT * FROM entries WHERE client_name = ?', [client], callback)
+    }
 }
 
 //clients
