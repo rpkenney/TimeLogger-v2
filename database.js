@@ -33,12 +33,44 @@ function insertEntry(client, task, date, hours, quantity, description, callback)
     db.run('INSERT INTO entries (client_name, task_name, date, hours, quantity, description) VALUES (?, ?, ?, ?, ?, ?)', [client, task, date, hours, quantity, description], callback);
 }
 
-function getEntries(callback, client) {
-    if (!client) {
-        db.all('SELECT * FROM entries', callback)
-    } else {
-        db.all('SELECT * FROM entries WHERE client_name = ?', [client], callback)
+function getEntries(callback, client, startDate, endDate) {
+
+
+    var queryString = 'SELECT * FROM entries'
+
+    var queryArgs = []
+    
+
+
+    var queryStringExtension = [];
+    if (client) {
+        queryStringExtension.push('client_name = ?') 
+	queryArgs.push(client);
+    } 
+
+
+    if (startDate) {
+        queryStringExtension.push('date >= ?');
+	queryArgs.push(startDate)
     }
+
+    if (endDate) {
+
+        queryStringExtension.push('date <= ?');
+	queryArgs.push(endDate)
+    }
+
+
+    for(let i = 0; i < queryStringExtension.length; i++){
+       if(i == 0) {
+	    queryString += ' WHERE '
+	
+	}else {
+	    queryString += ' AND '
+	}
+	queryString += queryStringExtension[i]; 
+    }
+    db.all(queryString, queryArgs, callback)
 }
 
 //clients

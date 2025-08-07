@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('entryForm').addEventListener('submit', (event) => {
         event.preventDefault();
 
+
         const client = document.getElementById('client').value;
         const date = document.getElementById('date').value;
         const taskGroups = document.querySelectorAll('.taskGroup');
@@ -111,16 +112,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
     });
 
-    document.getElementById("searchClient").addEventListener("change", async (event) => {
-        const selectedValue = event.target.value;
-        const div = document.getElementById("searchResults");
+    document.getElementById("searchBar").addEventListener("change", async (event) => {
+        
+
+	const client = document.getElementById("searchClient").value;
+	const startDate = document.getElementById("searchStartDate").value;
+	const endDate = document.getElementById("searchEndDate").value;
+	const div = document.getElementById("searchResults");
         div.innerHTML = "";
 
         var entries
 
         try {
             const [entryRows] = await Promise.all([
-                getEntriesAsync(selectedValue)
+                getEntriesAsync(client, startDate, endDate)
             ]);
             entries = entryRows
         } catch (err) {
@@ -128,8 +133,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         entries.forEach((entry) => createEntryCard(entry, clients, tasks))
-
-        console.log(entries)
     });
 });
 
@@ -151,12 +154,12 @@ function getTasksAsync() {
     });
 }
 
-function getEntriesAsync(client) {
+function getEntriesAsync(client, startDate, endDate) {
     return new Promise((resolve, reject) => {
         getEntries((err, rows) => {
             if (err) reject(err)
             else resolve(rows)
-        }, client);
+        }, client, startDate, endDate);
     })
 }
 
@@ -178,6 +181,7 @@ function populateTaskDropdown(select, tasks) {
 
 
 function createEntryCard(row, clients, taskTypes) {
+
     const taskDiv = document.createElement("div");
     taskDiv.className = "task-entry";
 
@@ -191,13 +195,12 @@ function createEntryCard(row, clients, taskTypes) {
     taskSelectables.appendChild(editableDate)
 
     const clientInput = document.createElement("select")
-
-    editableClient = insertEditableComponent("Client", clientInput, row.client, clients)
+    editableClient = insertEditableComponent("Client", clientInput, row.client_name, clients)
     taskSelectables.appendChild(editableClient)
 
     const taskInput = document.createElement("select")
 
-    editableTask = insertEditableComponent("Task", taskInput, row.task, taskTypes)
+    editableTask = insertEditableComponent("Task", taskInput, row.task_name, taskTypes)
     taskSelectables.appendChild(editableTask)
 
     const hoursInput = document.createElement('input');
@@ -247,10 +250,10 @@ function insertEditableComponent(header, editModeDiv, content, options) {
 
     const regularModeDiv = document.createElement("div");
     regularModeDiv.textContent = content;
-
+    regularModeDiv.style.display = "block";
     regularModeDiv.className = "editableContent"
 
-    editModeDiv.display = "none";
+    editModeDiv.style.display = "none";
 
     if (options !== undefined) {
         options.forEach(option => {
