@@ -73,6 +73,10 @@ function getEntries(callback, client, startDate, endDate) {
     db.all(queryString, queryArgs, callback)
 }
 
+function updateEntry(entry, callback) {
+	db.run('UPDATE entries SET client_name = ?, task_name = ?, date = ?, quantity = ?, description = ? WHERE id = ?', [entry.client_name, entry.task_name, entry.date, entry.quantity, entry.description, entry.id], callback); 
+}
+
 //clients
 function createClientsTable(callback) {
     db.run('CREATE TABLE IF NOT EXISTS clients (name TEXT PRIMARY KEY, active BOOLEAN DEFAULT 1)', [], callback);
@@ -171,7 +175,8 @@ module.exports = {
     updateHourlyRate,
     createEntriesTable,
     insertEntry,
-    getEntries
+    getEntries,
+    updateEntry
 };
 
 function close() {

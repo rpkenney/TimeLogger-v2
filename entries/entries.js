@@ -1,308 +1,328 @@
-const { getClients, getTasks, insertEntry, getEntries } = require('../database');
+const { getClients, getTasks, insertEntry, getEntries, updateEntry}  = require('../database');
 
 
 var clients
 var tasks
 document.addEventListener('DOMContentLoaded', async () => {
 
-    const newBtn = document.getElementById('newBtn');
-    const searchBtn = document.getElementById('searchBtn');
-    const newContent = document.getElementById('newContent');
-    const searchContent = document.getElementById('searchContent');
+	const newBtn = document.getElementById('newBtn');
+	const searchBtn = document.getElementById('searchBtn');
+	const newContent = document.getElementById('newContent');
+	const searchContent = document.getElementById('searchContent');
 
-    searchContent.style.display = 'none';
+	searchContent.style.display = 'none';
 
-    newBtn.addEventListener('click', () => {
-        newContent.style.display = 'block';
-        searchContent.style.display = 'none';
-    });
+	newBtn.addEventListener('click', () => {
+		newContent.style.display = 'block';
+		searchContent.style.display = 'none';
+	});
 
-    searchBtn.addEventListener('click', () => {
-        searchContent.style.display = 'flex';
-        newContent.style.display = 'none';
-    });
+	searchBtn.addEventListener('click', () => {
+		searchContent.style.display = 'flex';
+		newContent.style.display = 'none';
+	});
 
-    var entries
-    try {
-        const [clientRows, taskRows, entryRows] = await Promise.all([
-            getClientsAsync(),
-            getTasksAsync(),
-            getEntriesAsync()
-        ]);
+	var entries
+	try {
+		const [clientRows, taskRows, entryRows] = await Promise.all([
+			getClientsAsync(),
+			getTasksAsync(),
+			getEntriesAsync()
+		]);
 
-        clients = clientRows.map(r => r.name);
-        tasks = taskRows.map(r => r.name);
-        entries = entryRows
-    } catch (err) {
-        console.error('Failed to load clients or tasks:', err);
-    }
+		clients = clientRows.map(r => r.name);
+		tasks = taskRows.map(r => r.name);
+		entries = entryRows
+	} catch (err) {
+		console.error('Failed to load clients or tasks:', err);
+	}
 
-    populateClientDropdown(document.getElementById('client'), clients);
-    populateClientDropdown(document.getElementById('searchClient'), clients);
-    populateTaskDropdown(document.getElementById('task'), tasks);
+	populateClientDropdown(document.getElementById('client'), clients);
+	populateClientDropdown(document.getElementById('searchClient'), clients);
+	populateTaskDropdown(document.getElementById('task'), tasks);
 
-    entries.forEach((entry) => createEntryCard(entry, clients, tasks))
+	entries.forEach((entry) => createEntryCard(entry, clients, tasks))
 
-    document.getElementById('addTaskBtn').addEventListener('click', () => {
-        const container = document.getElementById('tasksContainer');
+	document.getElementById('addTaskBtn').addEventListener('click', () => {
+		const container = document.getElementById('tasksContainer');
 
-        const html = `
-                 <div class="taskGroup secondary">
-                    <label>Task:</label>
-                    <button class="removeTask" type="button">Remove</button>
-                    <div id="taskForm">
-                        <select id="task" name="task" required>
-                            <option value="">Select a task</option>
-                        </select>
-                        <input type="number" name="hours" step="1" min="0" placeholder="Hours">
-                        <input type="number" name="quantity" step="1" min="0" placeholder="Quantity">
-                    </div>
-                    <div class="task-description-container">
-                        <textarea name="description" placeholder="Description" required></textarea>
-                    </div>
-                </div>`;
+		const html = `
+				 <div class="taskGroup secondary">
+					<label>Task:</label>
+					<button class="removeTask" type="button">Remove</button>
+					<div id="taskForm">
+						<select id="task" name="task" required>
+							<option value="">Select a task</option>
+						</select>
+						<input type="number" name="hours" step="1" min="0" placeholder="Hours">
+						<input type="number" name="quantity" step="1" min="0" placeholder="Quantity">
+					</div>
+					<div class="task-description-container">
+						<textarea name="description" placeholder="Description" required></textarea>
+					</div>
+				</div>`;
 
-        container.insertAdjacentHTML('beforeend', html);
+		container.insertAdjacentHTML('beforeend', html);
 
-        const newTaskSelect = container.lastElementChild.querySelector('select[name="task"]');
-        populateTaskDropdown(newTaskSelect, tasks);
-    })
+		const newTaskSelect = container.lastElementChild.querySelector('select[name="task"]');
+		populateTaskDropdown(newTaskSelect, tasks);
+	})
 
-    document.getElementById("tasksContainer").addEventListener('click', (event) => {
-        if (event.target.classList.contains('removeTask')) {
-            event.target.closest('.taskGroup').remove();
-        }
-    });
+	document.getElementById("tasksContainer").addEventListener('click', (event) => {
+		if (event.target.classList.contains('removeTask')) {
+			event.target.closest('.taskGroup').remove();
+		}
+	});
 
-    document.getElementById('entryForm').addEventListener('submit', (event) => {
-        event.preventDefault();
+	document.getElementById('entryForm').addEventListener('submit', (event) => {
+		event.preventDefault();
 
 
-        const client = document.getElementById('client').value;
-        const date = document.getElementById('date').value;
-        const taskGroups = document.querySelectorAll('.taskGroup');
+		const client = document.getElementById('client').value;
+		const date = document.getElementById('date').value;
+		const taskGroups = document.querySelectorAll('.taskGroup');
 
-        const tasksData = Array.from(taskGroups).map(group => {
-            return {
-                task: group.querySelector('select[name="task"]').value,
-                hours: group.querySelector('input[name="hours"]').value,
-                quantity: group.querySelector('input[name="quantity"]').value,
-                description: group.querySelector('textarea[name="description"]').value,
-            };
-        });
+		const tasksData = Array.from(taskGroups).map(group => {
+			return {
+				task: group.querySelector('select[name="task"]').value,
+				hours: group.querySelector('input[name="hours"]').value,
+				quantity: group.querySelector('input[name="quantity"]').value,
+				description: group.querySelector('textarea[name="description"]').value,
+			};
+		});
 
-        const insertPromises = tasksData.map(t => {
-            return new Promise((resolve, reject) => {
-                insertEntry(client, t.task, date, t.hours || 0, t.quantity || 0, t.description, (err) => {
-                    if (err) reject(err);
-                    else resolve();
-                });
-            });
-        });
+		const insertPromises = tasksData.map(t => {
+			return new Promise((resolve, reject) => {
+				insertEntry(client, t.task, date, t.hours || 0, t.quantity || 0, t.description, (err) => {
+					if (err) reject(err);
+					else resolve();
+				});
+			});
+		});
 
-        Promise.all(insertPromises)
-            .then(() => {
-                alert('All tasks inserted successfully!');
-                document.getElementById('entryForm').reset();
-                document.querySelectorAll('div.remove-me').forEach(el => el.remove());
-            })
-            .catch(err => {
-                console.error('Error inserting tasks:', err);
-                alert('There was an error inserting your tasks.');
-            });
-    });
+		Promise.all(insertPromises)
+			.then(() => {
+				alert('All tasks inserted successfully!');
+				document.getElementById('entryForm').reset();
+				document.querySelectorAll('div.remove-me').forEach(el => el.remove());
+			})
+			.catch(err => {
+				console.error('Error inserting tasks:', err);
+				alert('There was an error inserting your tasks.');
+			});
+	});
 
-    document.getElementById("searchBar").addEventListener("change", async (event) => {
-        
+	document.getElementById("searchBar").addEventListener("change", async (event) => {
+		
 
 	const client = document.getElementById("searchClient").value;
 	const startDate = document.getElementById("searchStartDate").value;
 	const endDate = document.getElementById("searchEndDate").value;
 	const div = document.getElementById("searchResults");
-        div.innerHTML = "";
+		div.innerHTML = "";
 
-        var entries
+		var entries
 
-        try {
-            const [entryRows] = await Promise.all([
-                getEntriesAsync(client, startDate, endDate)
-            ]);
-            entries = entryRows
-        } catch (err) {
-            console.error('Failed to load entries:', err);
-        }
+		try {
+			const [entryRows] = await Promise.all([
+				getEntriesAsync(client, startDate, endDate)
+			]);
+			entries = entryRows
+		} catch (err) {
+			console.error('Failed to load entries:', err);
+		}
 
-        entries.forEach((entry) => createEntryCard(entry, clients, tasks))
-    });
+		entries.forEach((entry) => createEntryCard(entry, clients, tasks))
+	});
 });
 
 function getClientsAsync() {
-    return new Promise((resolve, reject) => {
-        getClients((err, rows) => {
-            if (err) reject(err);
-            else resolve(rows);
-        });
-    });
+	return new Promise((resolve, reject) => {
+		getClients((err, rows) => {
+			if (err) reject(err);
+			else resolve(rows);
+		});
+	});
 }
 
 function getTasksAsync() {
-    return new Promise((resolve, reject) => {
-        getTasks((err, rows) => {
-            if (err) reject(err);
-            else resolve(rows);
-        });
-    });
+	return new Promise((resolve, reject) => {
+		getTasks((err, rows) => {
+			if (err) reject(err);
+			else resolve(rows);
+		});
+	});
 }
 
 function getEntriesAsync(client, startDate, endDate) {
-    return new Promise((resolve, reject) => {
-        getEntries((err, rows) => {
-            if (err) reject(err)
-            else resolve(rows)
-        }, client, startDate, endDate);
-    })
+	return new Promise((resolve, reject) => {
+		getEntries((err, rows) => {
+			if (err) reject(err)
+			else resolve(rows)
+		}, client, startDate, endDate);
+	})
 }
 
 function populateClientDropdown(select, clients) {
-    clients.forEach(name => {
-        const option = document.createElement('option');
-        option.value = option.textContent = name;
-        select.appendChild(option);
-    });
+	clients.forEach(name => {
+		const option = document.createElement('option');
+		option.value = option.textContent = name;
+		select.appendChild(option);
+	});
 }
 
 function populateTaskDropdown(select, tasks) {
-    tasks.forEach(name => {
-        const option = document.createElement('option');
-        option.value = option.textContent = name;
-        select.appendChild(option);
-    });
+	tasks.forEach(name => {
+		const option = document.createElement('option');
+		option.value = option.textContent = name;
+		select.appendChild(option);
+	});
 }
 
 
 function createEntryCard(row, clients, taskTypes) {
+	const taskDiv = document.createElement("div");
+	taskDiv.className = "task-entry";
 
-    const taskDiv = document.createElement("div");
-    taskDiv.className = "task-entry";
+	const taskSelectables = document.createElement("div")
+	taskSelectables.className = "task-selectables"
 
-    const taskSelectables = document.createElement("div")
-    taskSelectables.className = "task-selectables"
+	const dateInput = {row: row, header: "Date", value: row.date, parentContainer: taskDiv }
 
-    const dateInput = document.createElement('input');
-    dateInput.type = "date"
+	dateInput.editModeDiv = document.createElement('input');
+	dateInput.editModeDiv.type = "date"
+	 
+	editableDate = insertEditableComponent(dateInput)
+	taskSelectables.appendChild(editableDate)
+	
+	const clientInput = {row: row, header: "Client", value: row.client_name, parentContainer: taskDiv, options: clients}
+	clientInput.editModeDiv = document.createElement("select")
+	
+	editableClient = insertEditableComponent(clientInput)
+	taskSelectables.appendChild(editableClient)
 
-    editableDate = insertEditableComponent("Date", dateInput, row.date)
-    taskSelectables.appendChild(editableDate)
+	const taskInput = {row: row, header: "Task", value: row.task_name, parentContainer: taskDiv, options: taskTypes} 
+	
+	taskInput.editModeDiv = document.createElement("select")
 
-    const clientInput = document.createElement("select")
-    editableClient = insertEditableComponent("Client", clientInput, row.client_name, clients)
-    taskSelectables.appendChild(editableClient)
+	editableTask = insertEditableComponent(taskInput)
+	taskSelectables.appendChild(editableTask)
+	
 
-    const taskInput = document.createElement("select")
+	const hoursInput = {row: row, header: "Hours", value: row.hours, parentContainer: taskDiv} 
+	hoursInput.editModeDiv = document.createElement('input');
+	hoursInput.editModeDiv.type = 'number';
+	hoursInput.editModeDiv.step = '1';
+	hoursInput.editModeDiv.min = '0';
 
-    editableTask = insertEditableComponent("Task", taskInput, row.task_name, taskTypes)
-    taskSelectables.appendChild(editableTask)
+	editableHours = insertEditableComponent(hoursInput)
+	taskSelectables.appendChild(editableHours)
 
-    const hoursInput = document.createElement('input');
-    hoursInput.type = 'number';
-    hoursInput.step = '1';
-    hoursInput.min = '0';
+	
+	const quantityInput = {row: row, header: "Quantity", value: row.quantity, parentContainer: taskDiv}
+	quantityInput.editModeDiv = document.createElement('input');
+	quantityInput.editModeDiv.type = 'number';
+	quantityInput.editModeDiv.step = '1';
+	quantityInput.editModeDiv.min = '0';
 
-    editableHours = insertEditableComponent("Hours", hoursInput, row.hours)
-    taskSelectables.appendChild(editableHours)
-
-    const quantityInput = document.createElement('input');
-    quantityInput.type = 'number';
-    quantityInput.step = '1';
-    quantityInput.min = '0';
-
-    editableQuantity = insertEditableComponent("Quantity", quantityInput, row.quantity)
-    taskSelectables.appendChild(editableQuantity)
+	editableQuantity = insertEditableComponent(quantityInput)
+	taskSelectables.appendChild(editableQuantity)
 
 
-    taskDiv.appendChild(taskSelectables)
 
-    const taskDescription = document.createElement("div")
+	const taskDescription = document.createElement("div")
 
-    const descriptionInput = document.createElement("textarea")
+	const descriptionInput = {row: row, header: "Description", value: row.description, parentContainer: taskDiv}
+	
+	descriptionInput.editModeDiv = document.createElement("textarea")
 
-    editableDescription = insertEditableComponent("Description", descriptionInput, row.description)
+	
+	editableDescription = insertEditableComponent(descriptionInput)
 
-    taskDescription.appendChild(editableDescription)
+	taskDescription.appendChild(editableDescription)
 
-    taskDiv.appendChild(taskDescription)
-
-    document.getElementById("searchResults").appendChild(taskDiv);
+	taskDiv.appendChild(taskSelectables)
+	taskDiv.appendChild(taskDescription)
+	
+	document.getElementById("searchResults").appendChild(taskDiv);
 }
 
-function insertEditableComponent(header, editModeDiv, content, options) {
 
-    const container = document.createElement("div")
-    container.className = "taskInputContainer"
+function updateEntryRow(args, regularModeDiv) {
+	args.editModeDiv.style.display = "none"
+	regularModeDiv.style.display = "block";
+	if (args.editModeDiv.value !== "") {
+		regularModeDiv.textContent = args.editModeDiv.value;
+		switch(args.header) {
+			case "Quantity":
+				args.row.quantity = args.editModeDiv.value;
+				break;
+			default:
+				console.error("this should never happen")
+		}
+		updateEntry(args.row, (err) => {if(err){console.error(err)}})
+	}
+}
 
-    const headerDiv = document.createElement("div")
-    headerDiv.textContent = header
-    headerDiv.className = "editableHeader"
 
-    container.appendChild(headerDiv)
+function insertEditableComponent(args) {
+	const container = document.createElement("div")
+	container.className = "taskInputContainer"
 
-    const contentDiv = document.createElement("div")
+	const headerDiv = document.createElement("div")
+	headerDiv.textContent = args.header
+	headerDiv.className = "editableHeader"
 
-    const regularModeDiv = document.createElement("div");
-    regularModeDiv.textContent = content;
-    regularModeDiv.style.display = "block";
-    regularModeDiv.className = "editableContent"
+	container.appendChild(headerDiv)
 
-    editModeDiv.style.display = "none";
+	const contentDiv = document.createElement("div")
 
-    if (options !== undefined) {
-        options.forEach(option => {
-            const o = document.createElement("option");
-            o.value = o.textContent = option;
-            editModeDiv.appendChild(o);
-        });
-    }
+	const regularModeDiv = document.createElement("div");
+	regularModeDiv.textContent = args.value;
+	regularModeDiv.style.display = "block";
+	regularModeDiv.className = "editableContent"
 
-    contentDiv.appendChild(regularModeDiv)
-    contentDiv.appendChild(editModeDiv)
+	args.editModeDiv.style.display = "none";
+	if (args.options !== undefined) {
+		args.options.forEach(option => {
+			const o = document.createElement("option");
+			o.value = o.textContent = option;
+			args.editModeDiv.appendChild(o);
+		});
+	}
+	args.editModeDiv.value = args.value;
 
-    container.append(contentDiv)
+	contentDiv.appendChild(regularModeDiv)
+	contentDiv.appendChild(args.editModeDiv)
 
-    document.addEventListener("click", (event) => {
-        if (!editModeDiv.contains(event.target) && !regularModeDiv.contains(event.target)) {
-            editModeDiv.style.display = "none"
-            regularModeDiv.style.display = "block";
-            if (editModeDiv.value !== "") {
-                regularModeDiv.textContent = editModeDiv.value;
-            }
-        }
-    });
+	container.append(contentDiv)
 
-    regularModeDiv.addEventListener("click", () => {
-        editModeDiv.style.display = "block"
-        regularModeDiv.style.display = "none";
-        editModeDiv.value = regularModeDiv.textContent
-        editModeDiv.focus();
-    })
+	args.editModeDiv.addEventListener("change", (event) => {
+			updateEntryRow(args, regularModeDiv);
+	});
 
-    editModeDiv.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" && event.target.value !== "") {
-            editModeDiv.style.display = "none"
-            regularModeDiv.style.display = "block";
-            regularModeDiv.textContent = event.target.value;
-        }
+	regularModeDiv.addEventListener("click", () => {
+		args.editModeDiv.style.display = "block"
+		regularModeDiv.style.display = "none";
+		args.editModeDiv.value = regularModeDiv.textContent
+		args.editModeDiv.focus();
+	})
 
-        if (event.key === "Escape") {
-            editModeDiv.style.display = "none"
-            regularModeDiv.style.display = "block";
-        }
-    });
+	args.editModeDiv.addEventListener("keydown", (event) => {
+		if(event.key === "Enter"){
+			updateEntryRow(args, regularModeDiv);
+		}
+		if (event.key === "Escape") {
+			args.editModeDiv.style.display = "none"
+			regularModeDiv.style.display = "block";
+		}
+	});
 
-    editModeDiv.addEventListener("change", () => {
-        editModeDiv.style.display = "none";
-        regularModeDiv.style.display = "block";
-        regularModeDiv.textContent = editModeDiv.value;
-    });
+	args.editModeDiv.addEventListener("change", () => {
+		args.editModeDiv.style.display = "none";
+		regularModeDiv.style.display = "block";
+		regularModeDiv.textContent = args.editModeDiv.value;
+	});
 
-    return container
+	return container
 }
